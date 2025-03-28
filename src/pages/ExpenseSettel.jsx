@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-
 const API_BASE_URL = "http://localhost:8080/api";
 
 const ExpenseSettle = () => {
@@ -12,6 +11,7 @@ const ExpenseSettle = () => {
   const [singleExpense, setSingleExpense] = useState(null);
   const [creators, setCreators] = useState({});
   const [loading, setLoading] = useState(true);
+  const [teamId, setTeamId] = useState(null);
 
   useEffect(() => {
     fetchExpenseDetails();
@@ -20,10 +20,11 @@ const ExpenseSettle = () => {
 
   const fetchSingleExpenseDetails = async () => {
     try {
-      const response = await fetch(`http://localhost:8080/expense/${expenseId}`);
-      const data = await response.json();
+      const response = await axios.get(`http://localhost:8080/expense/${expenseId}`);
+      const data = response.data;
       if (data) {
         setSingleExpense(data);
+        setTeamId(data.teamId);
       } else {
         setSingleExpense(null);
       }
@@ -36,8 +37,8 @@ const ExpenseSettle = () => {
 
   const fetchExpenseDetails = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expense-splits/${expenseId}`);
-      const data = await response.json();
+      const response = await axios.get(`${API_BASE_URL}/expense-splits/${expenseId}`);
+      const data = response.data;
       setExpense(data.length > 0 ? data : []);
 
       // Extract unique userIds from expense splits
@@ -54,59 +55,47 @@ const ExpenseSettle = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:8080/teams/creators`, // API to get usernames
+        `http://localhost:8080/teams/creators`,
         creatorIds,
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
       // Convert response to { userId: username }
-      const creatorMap = {};
-      response.data.forEach((user) => {
-        creatorMap[user.userId] = user.username;
-      });
+      const creatorMap = response.data.reduce((acc, user) => {
+        acc[user.userId] = user.username;
+        return acc;
+      }, {});
       setCreators(creatorMap);
     } catch (error) {
       console.error("Error fetching creator names:", error);
     }
   };
 
-  const handleRequestToMarkPaid = async (userId) => {
+  const handleRequestToMarkRequest = async (splitId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expense-splits/${userId}/status?status=Request`, {
-        method: "PUT",
-      });
-
-      if (response.ok) {
-        setExpense((prev) =>
-          prev.map((split) =>
-            split.userId === userId ? { ...split, status: "Request" } : split
-          )
-        );
-      } else {
-        console.error("Failed to request payment status.");
-      }
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API_BASE_URL}/expense-splits/request-payment/${splitId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchExpenseDetails();
     } catch (error) {
       console.error("Error updating status:", error);
     }
   };
 
-  const handleVerifyAndSettle = async () => {
-    if (user.userId !== singleExpense?.paidBy) {
-      alert("Only the person who paid can settle the expense.");
-      return;
-    }
+  const handleRequestToMarkSettled = async (splitId) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/expenses/${expenseId}/settle`, {
-        method: "PUT",
-      });
-
-      if (response.ok) {
-        setSingleExpense((prev) => ({ ...prev, status: "Settled" }));
-      } else {
-        alert("Failed to settle the expense.");
-      }
+      const token = localStorage.getItem("token");
+      await axios.patch(
+        `${API_BASE_URL}/expense-splits/verify-payment/${splitId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      fetchExpenseDetails();
     } catch (error) {
-      console.error("Error settling expense:", error);
+      console.error("Error updating status:", error);
     }
   };
 
@@ -127,28 +116,37 @@ const ExpenseSettle = () => {
         <h3 className="text-lg font-bold mt-4">Members Involved:</h3>
         <ul>
           {expense.length > 0 ? (
-            expense.map((split) => (
+            expense.filter((split) => split.userId !== singleExpense.paidBy).map((split) => (
               <li key={split.splitId} className="flex justify-between items-center py-2 border-b">
-                <span>{user.userId === split.userId ? "You" : creators[split.userId] || `User ID: ${split.userId}`}</span>
+                <span>
+                  {user.userId === split.userId ? "You" : creators[split.userId] || `User ID: ${split.userId}`}
+                </span>
                 <span>Amount: ${split.amount}</span>
-                <button
-                  className="ml-4 bg-blue-500 text-white px-3 py-1 rounded"
-                  onClick={() => handleRequestToMarkPaid(split.userId)}
-                >
-                  Request to Mark as Paid
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => handleRequestToMarkRequest(split.splitId)}
+                    className={`text-white px-3 py-1 rounded ${
+                      split.status === "Pending" ? "bg-yellow-500" : split.status === "Requested" ? "bg-blue-500" : "bg-green-500"
+                    } ${split.userId !== user.userId ? "cursor-not-allowed opacity-50" : ""}`}
+                    disabled={split.userId !== user.userId}
+                  >
+                    {split.status}
+                  </button>
+                  {user.userId === singleExpense.paidBy && split.status !== "Settled" && (
+                    <button
+                      onClick={() => handleRequestToMarkSettled(split.splitId)}
+                      className={`px-3 py-1 rounded ${split.status === "Settled" ? "bg-gray-400 cursor-not-allowed" : "bg-green-500"} text-white`}
+                    >
+                      Verify
+                    </button>
+                  )}
+                </div>
               </li>
             ))
           ) : (
             <p>No members found.</p>
           )}
         </ul>
-
-        {user.userId === singleExpense.paidBy && singleExpense.status !== "Settled" && (
-          <button className="mt-4 w-full bg-green-500 text-white py-2 rounded" onClick={handleVerifyAndSettle}>
-            Verify & Settle
-          </button>
-        )}
       </div>
     </div>
   );

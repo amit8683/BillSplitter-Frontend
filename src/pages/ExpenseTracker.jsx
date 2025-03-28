@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-import { useParams, useNavigate } from "react-router-dom"; // ✅ Import useNavigate
+import { useParams, useNavigate } from "react-router-dom";
 
 const ExpenseTracker = () => {
   const { teamId } = useParams();
-  const navigate = useNavigate(); // ✅ Initialize navigation
+  const navigate = useNavigate();
+  const { user, setTeamsId } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [amount, setAmount] = useState("");
   const [description, setDescription] = useState("");
@@ -13,7 +14,7 @@ const ExpenseTracker = () => {
   const [loading, setLoading] = useState(false);
   const [members, setMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const { user } = useAuth();
+  setTeamsId(teamId);
 
   useEffect(() => {
     fetchTeamMembers();
@@ -23,9 +24,12 @@ const ExpenseTracker = () => {
   const fetchTeamMembers = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`http://localhost:8080/teamMembers/team/${teamId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://localhost:8080/teamMembers/team/${teamId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setMembers(response.data);
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -35,23 +39,27 @@ const ExpenseTracker = () => {
   const fetchExpenses = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`http://localhost:8080/expense/team/${teamId}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(
+        `http://localhost:8080/expense/team/${teamId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       setExpenses(response.data);
     } catch (error) {
       console.error("Error fetching expenses:", error);
     }
   };
 
-  const handleExpenseClick = (expenseId) => {
-    navigate(`/expense/${expenseId}`); // ✅ Navigate to ExpenseSettel page
-  };
-
   const handleAddExpense = async (e) => {
     e.preventDefault();
-    if (!amount || !description || !expenseName || selectedMembers.length === 0) {
-      alert("Please enter an expense name, amount, description, and select at least one member.");
+    if (
+      !amount ||
+      !description ||
+      !expenseName ||
+      selectedMembers.length === 0
+    ) {
+      alert("Please fill all fields and select at least one member.");
       return;
     }
 
@@ -59,7 +67,7 @@ const ExpenseTracker = () => {
     try {
       const token = localStorage.getItem("token");
       const involvedMembersEmails = members
-        .filter((member) => selectedMembers.includes(member.user_id))
+        .filter((member) => selectedMembers.includes(member.userId))
         .map((member) => member.email);
 
       await axios.post(
@@ -72,7 +80,9 @@ const ExpenseTracker = () => {
           paidBy: user.userId,
           involvedMembers: involvedMembersEmails,
         },
-        { headers: { Authorization: `Bearer ${token}` } }
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       setExpenseName("");
@@ -87,79 +97,100 @@ const ExpenseTracker = () => {
     }
   };
 
-  const handleMemberSelection = (memberId) => {
-    setSelectedMembers((prev) =>
-      prev.includes(memberId) ? prev.filter((id) => id !== memberId) : [...prev, memberId]
-    );
-  };
+  const totalExpense = expenses.reduce(
+    (sum, expense) => sum + expense.amount,
+    0
+  );
 
   return (
-    <div className="min-h-screen flex bg-gray-100 p-6">
-      <div className="w-1/2 p-4">
-        <h2 className="text-2xl font-semibold mb-3">Team Expenses</h2>
+    <div className="min-h-screen bg-gray-100 p-4 flex flex-col lg:flex-row gap-6">
+      {/* Expenses List */}
+      <div className="lg:w-1/2 w-full bg-white shadow-lg rounded-lg p-6">
+        <h2 className="text-2xl font-bold mb-4 text-gray-700">Team Expenses</h2>
         {expenses.length > 0 ? (
-          <ul className="space-y-2">
+          <ul className="space-y-3 overflow-y-auto max-h-80">
             {expenses.map((expense) => (
               <li
                 key={expense.expenseId}
-                className="bg-white p-3 shadow rounded-lg flex justify-between cursor-pointer hover:bg-gray-200 transition"
-                onClick={() => handleExpenseClick(expense.expenseId)} // ✅ Click handler
-                
+                className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 transition"
+                onClick={() => navigate(`/expense/${expense.expenseId}`)}
               >
-                <span>{expense.expenseName} - {expense.description}</span>
-                <span className="font-bold">₹{expense.amount}</span>
+                <span className="truncate max-w-[70%]">
+                  {expense.expenseName}
+                </span>
+                <span className="font-bold text-blue-600">
+                  ₹{expense.amount}
+                </span>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="text-gray-500">No expenses recorded.</p>
+          <p className="text-gray-500 text-center">No expenses recorded.</p>
         )}
+        <div className="text-xl font-bold text-blue-600 mt-4 text-center">
+          Total Expense: ₹{totalExpense}
+        </div>
       </div>
 
-      <div className="w-1/2 p-4">
-        <h1 className="text-3xl font-bold mb-4">Add Expense</h1>
-        <form onSubmit={handleAddExpense} className="bg-white p-4 shadow rounded-lg">
+      {/* Add Expense Form */}
+      <div className="lg:w-1/2 w-full bg-white shadow-lg rounded-lg p-6">
+        <h1 className="text-2xl font-bold mb-4 text-center">Add Expense</h1>
+        <form onSubmit={handleAddExpense} className="space-y-4">
           <input
             type="text"
             placeholder="Expense Name"
             value={expenseName}
             onChange={(e) => setExpenseName(e.target.value)}
-            className="w-full p-2 border rounded mb-2"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
             required
           />
           <input
             type="number"
-            placeholder="Enter amount"
+            placeholder="Amount"
             value={amount}
             onChange={(e) => setAmount(e.target.value)}
-            className="w-full p-2 border rounded mb-2"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
             required
           />
           <input
             type="text"
-            placeholder="Enter description"
+            placeholder="Description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="w-full p-2 border rounded mb-4"
+            className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-400"
             required
           />
-          <div className="mb-4">
+
+          {/* Members Involved */}
+          <div>
             <h3 className="font-semibold mb-2">Members Involved:</h3>
-            {members.map((member) => (
-              <label key={member.user_id} className="block">
-                <input
-                  type="checkbox"
-                  checked={selectedMembers.includes(member.user_id)}
-                  onChange={() => handleMemberSelection(member.user_id)}
-                  className="mr-2"
-                />
-                {member.username} ({member.email})
-              </label>
-            ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+              {members.map((member) => (
+                <label
+                  key={member.userId}
+                  className="flex items-center bg-gray-100 p-3 rounded-lg shadow-md cursor-pointer break-words"
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedMembers.includes(member.userId)}
+                    onChange={() =>
+                      setSelectedMembers((prev) =>
+                        prev.includes(member.userId)
+                          ? prev.filter((id) => id !== member.userId)
+                          : [...prev, member.userId]
+                      )
+                    }
+                    className="mr-2"
+                  />
+                  <span className="truncate">{member.username}</span>
+                </label>
+              ))}
+            </div>
           </div>
+
           <button
             type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg transition"
             disabled={loading}
           >
             {loading ? "Adding..." : "Add Expense"}

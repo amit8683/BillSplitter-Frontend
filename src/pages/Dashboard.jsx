@@ -120,6 +120,10 @@ const Dashboard = () => {
       {/* Left Section - Main Content */}
       <div className="w-full lg:w-2/3 flex flex-col items-center">
         <h1 className="text-3xl font-bold mb-4">Welcome to Bill Splitter</h1>
+        <p className="text-lg text-gray-600 mb-6 max-w-2xl">
+          Bill Splitter is a simple and efficient way to manage shared expenses with friends, family, or colleagues. 
+          Easily create teams, add members, and track expenses to ensure fair and transparent cost sharing.
+        </p>
         <button
           onClick={handleCreateTeam}
           className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg shadow"

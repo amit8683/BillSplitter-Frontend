@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 const Signup = () => {
   const [formData, setFormData] = useState({
@@ -6,6 +7,8 @@ const Signup = () => {
     email: "",
     password: "",
   });
+
+  const navigate = useNavigate(); // ✅ Hook for navigation
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -19,7 +22,7 @@ const Signup = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData), // Use formData instead of userData
+        body: JSON.stringify(formData),
       });
 
       const text = await response.text(); // Get the raw response
@@ -31,6 +34,9 @@ const Signup = () => {
 
       const data = JSON.parse(text); // Convert to JSON
       console.log("Signup Success:", data);
+
+      // ✅ Redirect to Login page after successful signup
+      navigate("/login");
     } catch (error) {
       console.error("Signup Error:", error);
     }
@@ -56,7 +62,7 @@ const Signup = () => {
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                   type="email"
-                  name="email" // Added missing name attribute
+                  name="email"
                   placeholder="Email"
                   value={formData.email}
                   onChange={handleChange}
@@ -65,7 +71,7 @@ const Signup = () => {
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                   type="password"
-                  name="password" // Added missing name attribute
+                  name="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
@@ -78,6 +84,18 @@ const Signup = () => {
                 >
                   <span className="ml-3">Sign Up</span>
                 </button>
+
+                {/* ✅ Extra button to navigate to the Login page */}
+                <p className="mt-3 text-sm text-center">
+                Already have an account?{" "}
+                  <button
+                    className="text-indigo-500 cursor-pointer hover:underline"
+                    onClick={() => navigate("/login")}
+                  >
+                    Log in here
+                  </button>
+                </p>
+
               </div>
             </div>
           </div>

@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
+
 const Login = () => {
-    const { login } = useAuth();
+  const { login } = useAuth();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -23,29 +24,26 @@ const Login = () => {
         },
         body: JSON.stringify(formData),
       });
-  
-      const text = await response.text(); // Get the raw response
-      console.log("Raw response:", text);
-  
+
+      const data = await response.json();
       if (!response.ok) {
-        throw new Error(`Signup failed: ${response.status}`);
+        throw new Error("Login failed");
       }
-  
-      const data = JSON.parse(text); // Convert to JSON (Make sure this is done first)
-      console.log("Signup Success:", data);
-  
+
       if (data.token) {
-        localStorage.setItem("token", data.token); // Store token in localStorage
-        console.log(data);
-        login({ token: data.token, email: data.email,userId:data.userId,username:data.username });
-        console.log("Token stored in localStorage");
+        localStorage.setItem("token", data.token);
+        login({
+          token: data.token,
+          email: data.email,
+          userId: data.userId,
+          username: data.username,
+        });
         navigate("/");
       }
     } catch (error) {
-      console.error("Signup Error:", error);
+      console.error("Login Error:", error);
     }
   };
-  
 
   return (
     <div className="min-h-screen bg-gray-100 text-gray-900 flex justify-center">
@@ -55,11 +53,10 @@ const Login = () => {
             <h1 className="text-2xl xl:text-3xl font-extrabold">Login</h1>
             <div className="w-full flex-1 mt-8">
               <div className="mx-auto max-w-xs">
-                
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                   type="email"
-                  name="email" // Added missing name attribute
+                  name="email"
                   placeholder="Email"
                   value={formData.email}
                   onChange={handleChange}
@@ -68,19 +65,29 @@ const Login = () => {
                 <input
                   className="w-full px-8 py-4 rounded-lg font-medium bg-gray-100 border border-gray-200 placeholder-gray-500 text-sm focus:outline-none focus:border-gray-400 focus:bg-white mt-5"
                   type="password"
-                  name="password" // Added missing name attribute
+                  name="password"
                   placeholder="Password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                 />
-
                 <button
                   className="mt-5 tracking-wide font-semibold bg-indigo-500 text-gray-100 w-full py-4 rounded-lg hover:bg-indigo-700 transition-all duration-300 ease-in-out flex items-center justify-center focus:shadow-outline focus:outline-none"
                   onClick={handleSubmit}
                 >
-                  <span className="ml-3">Sign Up</span>
+                  <span className="ml-3">Login</span>
                 </button>
+
+                {/* ✅ Extra "Sign Up" button for new users */}
+                <p className="mt-3 text-sm text-center">
+                  Don't have an account?{" "}
+                  <button
+                    className="text-indigo-500 cursor-pointer hover:underline"
+                    onClick={() => navigate("/register")}
+                  >
+                    Sign up
+                  </button>
+                </p>
               </div>
             </div>
           </div>
@@ -91,4 +98,3 @@ const Login = () => {
 };
 
 export default Login;
-
