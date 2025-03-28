@@ -19,8 +19,11 @@ const ExpenseSettle = () => {
   }, [expenseId]);
 
   const fetchSingleExpenseDetails = async () => {
+    const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`http://localhost:8080/expense/${expenseId}`);
+      const response = await axios.get(`http://localhost:8080/expense/${expenseId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const data = response.data;
       if (data) {
         setSingleExpense(data);
@@ -36,8 +39,11 @@ const ExpenseSettle = () => {
   };
 
   const fetchExpenseDetails = async () => {
+    const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`${API_BASE_URL}/expense-splits/${expenseId}`);
+      const response = await axios.get(`${API_BASE_URL}/expense-splits/${expenseId}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
       const data = response.data;
       setExpense(data.length > 0 ? data : []);
 
