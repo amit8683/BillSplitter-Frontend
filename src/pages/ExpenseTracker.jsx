@@ -17,7 +17,9 @@ const ExpenseTracker = () => {
   const [team, setTeam] = useState(null);
   const [error, setError] = useState(null);
 
-  setTeamsId(teamId);
+  useEffect(() => {
+    setTeamsId(teamId);
+  }, [teamId, setTeamsId]); // Ensure it runs only when teamId changes
 
   // Fetch team members and expenses when teamId avilable
   useEffect(() => {
@@ -38,7 +40,7 @@ const ExpenseTracker = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Fetach Team members",response.data);
+      console.log("Fetach Team members", response.data);
       setMembers(response.data);
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -68,14 +70,16 @@ const ExpenseTracker = () => {
     const fetchTeam = async () => {
       const token = localStorage.getItem("token");
       try {
-        const response = await axios.get(`http://localhost:8080/api/teams/${teamId}`,
+        const response = await axios.get(
+          `http://localhost:8080/api/teams/${teamId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
-          });
+          }
+        );
         setTeam(response.data);
-        console.log("TEam data hai bhai",response.data)
+        console.log("TEam data hai bhai", response.data);
       } catch (err) {
-        setError("Failed to fetch team details.",err);
+        setError("Failed to fetch team details.", err);
       } finally {
         setLoading(false);
       }
@@ -86,7 +90,6 @@ const ExpenseTracker = () => {
     }
   }, []);
 
-
   /*
     Handles adding a new expense to the team.
     Validates form input, submits the request, and updates the expense list.
@@ -96,14 +99,15 @@ const ExpenseTracker = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      console.log(expenses)
+      console.log(expenses);
       const involvedMembersEmails = members
         .filter(
           (member) =>
             selectedMembers.includes(member.userId) ||
-            member.userId === team.createdBy
+            (team && member.userId === team.createdBy) // Check if team is not null
         )
         .map((member) => member.email);
+
       await axios.post(
         "http://localhost:8080/expense/add",
         {
@@ -141,34 +145,37 @@ const ExpenseTracker = () => {
     <div className="min-h-screen bg-gray-100 p-4 flex flex-col lg:flex-row gap-6">
       {/* Expenses List */}
       <div className="lg:w-1/2 w-full bg-white shadow-lg rounded-lg p-6 flex flex-col h-full max-h-[calc(100vh-6rem)] pb-6">
-  <h2 className="text-2xl font-bold mb-4 text-gray-700">Team Expenses</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-700">Team Expenses</h2>
 
-  {/* Scrollable Expenses List */}
-  <div className="overflow-y-auto flex-1 max-h-80 pr-2">
-    {expenses.length > 0 ? (
-      <ul className="space-y-3">
-        {expenses.map((expense) => (
-          <li
-            key={expense.expenseId}
-            className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 transition"
-            onClick={() => navigate(`/expense/${expense.expenseId}`)}
-          >
-            <span className="truncate max-w-[70%]">{expense.expenseName}</span>
-            <span className="font-bold text-blue-600">₹{expense.amount}</span>
-          </li>
-        ))}
-      </ul>
-    ) : (
-      <p className="text-gray-500 text-center">No expenses recorded.</p>
-    )}
-  </div>
+        {/* Scrollable Expenses List */}
+        <div className="overflow-y-auto flex-1 max-h-80 pr-2">
+          {expenses.length > 0 ? (
+            <ul className="space-y-3">
+              {expenses.map((expense) => (
+                <li
+                  key={expense.expenseId}
+                  className="flex justify-between items-center bg-gray-100 p-4 rounded-lg shadow-md cursor-pointer hover:bg-gray-200 transition"
+                  onClick={() => navigate(`/expense/${expense.expenseId}`)}
+                >
+                  <span className="truncate max-w-[70%]">
+                    {expense.expenseName}
+                  </span>
+                  <span className="font-bold text-blue-600">
+                    ₹{expense.amount}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-gray-500 text-center">No expenses recorded.</p>
+          )}
+        </div>
 
-  {/* Total Expense (Fixed at the Bottom) */}
-  <div className="text-xl font-bold text-blue-600 mt-4 text-center">
-    Total Expense: ₹{totalExpense}
-  </div>
-</div>
-
+        {/* Total Expense (Fixed at the Bottom) */}
+        <div className="text-xl font-bold text-blue-600 mt-4 text-center">
+          Total Expense: ₹{totalExpense}
+        </div>
+      </div>
 
       {/* Add Expense Form */}
       <div className="lg:w-1/2 w-full bg-white shadow-lg rounded-lg p-6">
