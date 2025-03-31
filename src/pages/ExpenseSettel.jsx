@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../context/AuthContext";
-const API_BASE_URL = "http://localhost:8080/api";
 
 const ExpenseSettle = () => {
   const { expenseId } = useParams();
@@ -13,15 +12,18 @@ const ExpenseSettle = () => {
   const [loading, setLoading] = useState(true);
   const [teamId, setTeamId] = useState(null);
 
+  // Fetch expense details when component mounts or expenseId changes
   useEffect(() => {
     fetchExpenseDetails();
     fetchSingleExpenseDetails();
   }, [expenseId]);
 
+  // Fetch details of a single expense
   const fetchSingleExpenseDetails = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`http://localhost:8080/expense/${expenseId}`,
+      const response = await axios.get(
+        `http://localhost:8080/expense/${expenseId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data;
@@ -38,13 +40,16 @@ const ExpenseSettle = () => {
     }
   };
 
+  // Fetch details of expense splits and involved members
   const fetchExpenseDetails = async () => {
     const token = localStorage.getItem("token");
     try {
-      const response = await axios.get(`${API_BASE_URL}/expense-splits/${expenseId}`,
+      const response = await axios.get(
+        `http://localhost:8080/api/expense-splits/${expenseId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data;
+      console.log("Settel Status"+JSON.stringify(data))
       setExpense(data.length > 0 ? data : []);
 
       // Extract unique userIds from expense splits
@@ -57,15 +62,15 @@ const ExpenseSettle = () => {
     }
   };
 
+  // Fetch usernames for given user IDs
   const fetchCreators = async (creatorIds) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:8080/teams/creators`,
+        `http://localhost:8080/api/teams/creators`,
         creatorIds,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-
       // Convert response to { userId: username }
       const creatorMap = response.data.reduce((acc, user) => {
         acc[user.userId] = user.username;
@@ -77,11 +82,12 @@ const ExpenseSettle = () => {
     }
   };
 
+  // Handle request to mark a split as "Requested"
   const handleRequestToMarkRequest = async (splitId) => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${API_BASE_URL}/expense-splits/request-payment/${splitId}`,
+        `http://localhost:8080/api/expense-splits/request-payment/${splitId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -91,11 +97,12 @@ const ExpenseSettle = () => {
     }
   };
 
+  // Handle request to mark a split as "Settled"
   const handleRequestToMarkSettled = async (splitId) => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `${API_BASE_URL}/expense-splits/verify-payment/${splitId}`,
+        `http://localhost:8080/api/expense-splits/verify-payment/${splitId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -112,47 +119,84 @@ const ExpenseSettle = () => {
     <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
       <div className="bg-white p-6 shadow-lg rounded-lg w-full max-w-lg">
         <h2 className="text-2xl font-bold mb-4">Expense Details</h2>
-        <p className="text-gray-600">Expense Name: {singleExpense.expenseName}</p>
-        <p className="text-gray-600">Description: {singleExpense.description}</p>
+        <p className="text-gray-600">
+          Expense Name: {singleExpense.expenseName}
+        </p>
+        <p className="text-gray-600">
+          Description: {singleExpense.description}
+        </p>
         <p className="text-gray-600">Amount: ${singleExpense.amount}</p>
         <p className="text-gray-600">
-          Paid By: {user.userId === singleExpense.paidBy ? "You" : creators[singleExpense.paidBy] || `User ID: ${singleExpense.paidBy}`}
+          Paid By:{" "}
+          {user.userId === singleExpense.paidBy
+            ? "You"
+            : creators[singleExpense.paidBy] ||
+              `User ID: ${singleExpense.paidBy}`}
         </p>
 
-        <h3 className="text-lg font-bold mt-4">Members Involved:</h3>
-        <ul>
-          {expense.length > 0 ? (
-            expense.filter((split) => split.userId !== singleExpense.paidBy).map((split) => (
-              <li key={split.splitId} className="flex justify-between items-center py-2 border-b">
-                <span>
-                  {user.userId === split.userId ? "You" : creators[split.userId] || `User ID: ${split.userId}`}
-                </span>
-                <span>Amount: ${split.amount}</span>
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => handleRequestToMarkRequest(split.splitId)}
-                    className={`text-white px-3 py-1 rounded ${
-                      split.status === "Pending" ? "bg-yellow-500" : split.status === "Requested" ? "bg-blue-500" : "bg-green-500"
-                    } ${split.userId !== user.userId ? "cursor-not-allowed opacity-50" : ""}`}
-                    disabled={split.userId !== user.userId}
-                  >
-                    {split.status}
-                  </button>
-                  {user.userId === singleExpense.paidBy && split.status !== "Settled" && (
-                    <button
-                      onClick={() => handleRequestToMarkSettled(split.splitId)}
-                      className={`px-3 py-1 rounded ${split.status === "Settled" ? "bg-gray-400 cursor-not-allowed" : "bg-green-500"} text-white`}
+        {Object.keys(creators).length  > 1 && (
+          <>
+            <h3 className="text-lg font-bold mt-4">Members Involved:</h3>
+            <ul>
+              {expense.length > 0 ? (
+                expense
+                  .filter((split) => split.userId !== singleExpense.paidBy)
+                  .map((split) => (
+                    <li
+                      key={split.splitId}
+                      className="flex justify-between items-center py-2 border-b"
                     >
-                      Verify
-                    </button>
-                  )}
-                </div>
-              </li>
-            ))
-          ) : (
-            <p>No members found.</p>
-          )}
-        </ul>
+                      <span>
+                        {user.userId === split.userId
+                          ? "You"
+                          : creators[split.userId] ||
+                            `User ID: ${split.userId}`}
+                      </span>
+                      <span>Amount: ${split.amount}</span>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() =>
+                            handleRequestToMarkRequest(split.splitId)
+                          }
+                          className={`text-white px-3 py-1 rounded ${
+                            split.status === "Pending"
+                              ? "bg-yellow-500"
+                              : split.status === "Requested"
+                              ? "bg-blue-500"
+                              : "bg-green-500"
+                          } ${
+                            split.userId !== user.userId
+                              ? "cursor-not-allowed opacity-50"
+                              : ""
+                          }`}
+                          disabled={split.userId !== user.userId}
+                        >
+                          {split.status}
+                        </button>
+                        {user.userId === singleExpense.paidBy &&
+                          split.status !== "Settled" && (
+                            <button
+                              onClick={() =>
+                                handleRequestToMarkSettled(split.splitId)
+                              }
+                              className={`px-3 py-1 rounded ${
+                                split.status === "Settled"
+                                  ? "bg-gray-400 cursor-not-allowed"
+                                  : "bg-green-500"
+                              } text-white`}
+                            >
+                              Verify
+                            </button>
+                          )}
+                      </div>
+                    </li>
+                  ))
+              ) : (
+                <p>No members found.</p>
+              )}
+            </ul>
+          </>
+        )}
       </div>
     </div>
   );

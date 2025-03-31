@@ -6,10 +6,8 @@ import ExpenseTracker from "./pages/ExpenseTracker";
 import Login from "./pages/Login";
 import Signup from "./pages/SignUp";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import PublicRoute from "./protection/PublicRoute";
-import ProtectedRoutes from "./protection/ProtectedRoutes";
-import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import PublicRoute from "./protectRoutes/PublicRoute";
+import ProtectedRoutes from "./protectRoutes/ProtectedRoutes";
 import TeamMembers from "./pages/TeamMembers";
 
 function App() {
