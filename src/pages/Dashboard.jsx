@@ -10,7 +10,7 @@ const Dashboard = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [teams, setTeams] = useState([]);
-  const [creators, setCreators] = useState({}); // Store creator names
+  const [creators, setCreators] = useState({});
   const { user } = useAuth();
 
   useEffect(() => {
@@ -81,7 +81,7 @@ const Dashboard = () => {
 
   // Remove a member input field`
   const handleRemoveMember = (index) => {
-    setMembers(members.filter((_, i) => i !== index));
+    setMembers(members.filter((_, removingIndex) => removingIndex !== index));
   };
 
   // Handle input change for team members
@@ -94,7 +94,6 @@ const Dashboard = () => {
   // Handle team creation form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
 
     setLoading(true);
     const token = localStorage.getItem("token");
@@ -146,107 +145,113 @@ const Dashboard = () => {
             <div className="bg-white p-6 rounded-lg shadow-lg w-96">
               <h2 className="text-xl font-bold mb-4">Create a Team</h2>
               <form onSubmit={handleSubmit}>
-  <input
-    type="text"
-    placeholder="Enter team name"
-    value={teamName}
-    onChange={(e) => setTeamName(e.target.value)}
-    className="w-full p-2 border rounded mb-4"
-    required
-  />
-  
-  <label className="block text-gray-700 font-semibold mb-2">Add Members:</label>
+                <input
+                  type="text"
+                  placeholder="Enter team name"
+                  value={teamName}
+                  onChange={(e) => setTeamName(e.target.value)}
+                  className="w-full p-2 border rounded mb-4"
+                  required
+                />
 
-  {/* Show member inputs only if at least one member is added */}
-  {members.length > 0 &&
-    members.map((member, index) => (
-      <div key={index} className="flex items-center gap-2 mb-4">
-        <input
-          type="text"
-          placeholder="Member Name"
-          value={member.name}
-          onChange={(e) => handleMemberChange(index, "name", e.target.value)}
-          className="p-2 border rounded w-1/2"
-        />
-        <input
-          type="email"
-          placeholder="Member Email"
-          value={member.email}
-          onChange={(e) => handleMemberChange(index, "email", e.target.value)}
-          className="p-2 border rounded w-1/2"
-        />
-        <button
-          type="button"
-          onClick={() => handleRemoveMember(index)}
-          className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
-        >
-          X
-        </button>
-      </div>
-    ))}
+                <label className="block text-gray-700 font-semibold mb-2">
+                  Add Members:
+                </label>
 
-  {/* Show "Add Member" button even if no members are added */}
-  <button
-    type="button"
-    onClick={handleAddMember}
-    className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mb-4"
-  >
-    Add Member
-  </button>
+                {/* Show member inputs only if at least one member is added */}
+                {members.length > 0 &&
+                  members.map((member, index) => (
+                    <div key={index} className="flex items-center gap-2 mb-4">
+                      <input
+                        type="text"
+                        placeholder="Member Name"
+                        value={member.name}
+                        onChange={(e) =>
+                          handleMemberChange(index, "name", e.target.value)
+                        }
+                        className="p-2 border rounded w-1/2"
+                      />
+                      <input
+                        type="email"
+                        placeholder="Member Email"
+                        value={member.email}
+                        onChange={(e) =>
+                          handleMemberChange(index, "email", e.target.value)
+                        }
+                        className="p-2 border rounded w-1/2"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveMember(index)}
+                        className="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded"
+                      >
+                        X
+                      </button>
+                    </div>
+                  ))}
 
-  <div className="flex justify-end">
-    <button
-      type="button"
-      onClick={() => setShowPopup(false)}
-      className="mr-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
-    >
-      Cancel
-    </button>
-    <button
-      type="submit"
-      disabled={loading}
-      className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded ${
-        loading ? "opacity-50 cursor-not-allowed" : ""
-      }`}
-    >
-      {loading ? "Creating..." : "Create"}
-    </button>
-  </div>
-</form>
+                {/* Show "Add Member" button even if no members are added */}
+                <button
+                  type="button"
+                  onClick={handleAddMember}
+                  className="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded mb-4"
+                >
+                  Add Member
+                </button>
+
+                <div className="flex justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowPopup(false)}
+                    className="mr-2 bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className={`bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded ${
+                      loading ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                  >
+                    {loading ? "Creating..." : "Create"}
+                  </button>
+                </div>
+              </form>
             </div>
           </div>
         )}
       </div>
-
       {/* Right Section - List of Teams */}
       <div className="w-full lg:w-1/3 p-6">
-  <h2 className="text-2xl font-bold mb-4">Your Teams</h2>
+        <h2 className="text-2xl font-bold mb-4">Your Teams</h2>
 
-  {teams.length > 0 ? (
-    <div className="max-h-80 overflow-y-auto border border-gray-300 rounded-lg p-2">
-      <ul className="space-y-4">
-        {teams.map((team) => (
-          <li
-            key={team.teamId}
-            className="bg-white p-4 rounded shadow hover:bg-gray-200 transition"
-          >
-            <Link to={`/expenses/${team.teamId}`}>
-              <h3 className="text-lg font-semibold">{team.teamName}</h3>
-              <p className="text-gray-600">
-                Created by:{" "}
-                {team.createdBy === user.userId
-                  ? "You"
-                  : creators[team.createdBy] || "Loading..."}
-              </p>
-            </Link>
-          </li>
-        ))}
-      </ul>
-    </div>
-  ) : (
-    <p className="text-gray-500">You haven't joined any teams yet.</p>
-  )}
-</div>;
+        {teams.length > 0 ? (
+          <div className="max-h-80 overflow-y-auto border border-gray-300 rounded-lg p-2">
+            <ul className="space-y-4">
+              {teams.map((team) => (
+                <li
+                  key={team.teamId}
+                  className="bg-white p-4 rounded shadow hover:bg-gray-200 transition"
+                >
+                  <Link to={`/expenses/${team.teamId}`}>
+                    <h3 className="text-lg font-semibold">{team.teamName}</h3>
+                    <p className="text-gray-600">
+                      Created by:{" "}
+                      {team.createdBy === user.userId
+                        ? "You"
+                        : creators[team.createdBy] || "Loading..."}
+                    </p>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : (
+          <p className="text-gray-500">You haven't joined any teams yet.</p>
+        )}
+      </div>
+      ;
     </div>
   );
 };

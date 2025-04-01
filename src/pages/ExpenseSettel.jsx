@@ -49,12 +49,10 @@ const ExpenseSettle = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data;
-      console.log("Settel Status"+JSON.stringify(data))
       setExpense(data.length > 0 ? data : []);
 
       // Extract unique userIds from expense splits
       const userIds = [...new Set(data.map((split) => split.userId))];
-
       // Fetch usernames
       fetchCreators(userIds);
     } catch (error) {

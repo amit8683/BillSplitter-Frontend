@@ -15,7 +15,6 @@ const ExpenseTracker = () => {
   const [members, setMembers] = useState([]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [team, setTeam] = useState(null);
-  const [error, setError] = useState(null);
 
   useEffect(() => {
     setTeamsId(teamId);
@@ -40,7 +39,6 @@ const ExpenseTracker = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-      console.log("Fetach Team members", response.data);
       setMembers(response.data);
     } catch (error) {
       console.error("Error fetching team members:", error);
@@ -77,9 +75,8 @@ const ExpenseTracker = () => {
           }
         );
         setTeam(response.data);
-        console.log("TEam data hai bhai", response.data);
       } catch (err) {
-        setError("Failed to fetch team details.", err);
+        console.error("Failed to fetch team details.", err);
       } finally {
         setLoading(false);
       }
@@ -99,7 +96,6 @@ const ExpenseTracker = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      console.log(expenses);
       const involvedMembersEmails = members
         .filter(
           (member) =>

@@ -9,7 +9,6 @@ const Navbar = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const { teamId } = useParams();
 
   const handleLogout = () => {
     logout();
