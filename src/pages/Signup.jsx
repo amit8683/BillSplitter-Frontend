@@ -19,7 +19,7 @@ const Signup = () => {
   //  Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Reset error state before making a request
+    setError("");
 
     try {
       const response = await fetch("http://localhost:8080/api/users/register", {

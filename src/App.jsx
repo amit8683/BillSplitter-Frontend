@@ -27,7 +27,7 @@ function App() {
           <Route path="/expenses/:teamId" element={<ProtectedRoutes><ExpenseTracker/></ProtectedRoutes>}/>
           <Route path="/expense/:expenseId" element={<ProtectedRoutes><ExpenseSettel /></ProtectedRoutes>} />
 
-          <Route path="/team/:teamId/members" element={<ProtectedRoutes><TeamMembers /></ProtectedRoutes>} />
+          <Route path="/team/members" element={<ProtectedRoutes><TeamMembers /></ProtectedRoutes>} />
         </Routes>
       </Router>
     </AuthProvider>

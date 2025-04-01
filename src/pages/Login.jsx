@@ -33,8 +33,7 @@ const Login = () => {
       if (!response.ok) {
         throw new Error(data.message || "Login failed");
       }
-
-      // If login is successful, store the token and user details
+      
       if (data.token) {
         localStorage.setItem("token", data.token);
         login({
@@ -43,7 +42,7 @@ const Login = () => {
           userId: data.userId,
           username: data.username,
         });
-        navigate("/"); // Redirect to homepage
+        navigate("/"); 
       }
     } catch (error) {
       console.error("Login Error:", error.message);
