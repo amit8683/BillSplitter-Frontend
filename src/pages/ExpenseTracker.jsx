@@ -34,7 +34,7 @@ const ExpenseTracker = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:8080/api/team-members/${teamId}/members`,
+        `http://localhost:8081/api/team-members/${teamId}/members`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -47,13 +47,13 @@ const ExpenseTracker = () => {
 
   /*
     Fetches the list of expenses for the current team.
-    Updates the `expenses` state with the fetched data.
+    Updates the expenses state with the fetched data.
    */
   const fetchExpenses = async () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:8080/expense/team/${teamId}`,
+        `http://localhost:8081/expense/team/${teamId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -69,7 +69,7 @@ const ExpenseTracker = () => {
       const token = localStorage.getItem("token");
       try {
         const response = await axios.get(
-          `http://localhost:8080/api/teams/${teamId}`,
+          `http://localhost:8081/api/teams/${teamId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -85,7 +85,7 @@ const ExpenseTracker = () => {
     if (teamId) {
       fetchTeam();
     }
-  }, []);
+  },  [teamId]);
 
   /*
     Handles adding a new expense to the team.
@@ -105,7 +105,7 @@ const ExpenseTracker = () => {
         .map((member) => member.email);
 
       await axios.post(
-        "http://localhost:8080/expense/add",
+        "http://localhost:8081/expense/add",
         {
           teamId,
           expenseName,
@@ -203,7 +203,7 @@ const ExpenseTracker = () => {
           />
 
           {/* Members Involved - Only show if there are other members */}
-          {members.length > 1 && (
+          {members.length > 1 && team && (
             <div>
               <h3 className="font-semibold mb-2">Members Involved:</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">

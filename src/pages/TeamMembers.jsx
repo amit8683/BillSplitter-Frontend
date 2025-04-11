@@ -18,7 +18,7 @@ const TeamMembers = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:8080/api/team-members/${teamsId}/members`,
+        `http://localhost:8081/api/team-members/${teamsId}/members`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }

@@ -23,7 +23,7 @@ const ExpenseSettle = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        `http://localhost:8080/expense/${expenseId}`,
+        `http://localhost:8081/expense/${expenseId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data;
@@ -45,7 +45,7 @@ const ExpenseSettle = () => {
     const token = localStorage.getItem("token");
     try {
       const response = await axios.get(
-        `http://localhost:8080/api/expense-splits/${expenseId}`,
+        `http://localhost:8081/api/expense-splits/${expenseId}`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const data = response.data;
@@ -65,7 +65,7 @@ const ExpenseSettle = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:8080/api/teams/creators`,
+        `http://localhost:8081/api/teams/creators`,
         creatorIds,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -85,7 +85,7 @@ const ExpenseSettle = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:8080/api/expense-splits/request-payment/${splitId}`,
+        `http://localhost:8081/api/expense-splits/request-payment/${splitId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -100,7 +100,7 @@ const ExpenseSettle = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.patch(
-        `http://localhost:8080/api/expense-splits/verify-payment/${splitId}`,
+        `http://localhost:8081/api/expense-splits/verify-payment/${splitId}`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );

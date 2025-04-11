@@ -22,7 +22,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:8080/api/teams/user/${user.userId}`,
+        `http://localhost:8081/api/teams/user/${user.userId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -48,7 +48,7 @@ const Dashboard = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:8080/api/teams/creators`, // Endpoint for getting usernames
+        `http://localhost:8081/api/teams/creators`, // Endpoint for getting usernames
         creatorIds,
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -99,7 +99,7 @@ const Dashboard = () => {
     const token = localStorage.getItem("token");
     try {
       await axios.post(
-        "http://localhost:8080/api/teams/create",
+        "http://localhost:8081/api/teams/create",
         {
           teamName,
           createdBy: user.userId,
